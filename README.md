@@ -6,6 +6,11 @@
 - 프론트: React
 - 인프라: PostgreSQL(+pgvector), Kubernetes
 
+## 아키텍처
+
+![서비스 아키텍처](docs/architecture.svg)
+
 ## 문서
 - [요구사항 명세서](docs/requirements-spec.md)
 - [기능 명세서](docs/functional-spec.md)
+- [아키텍처 다이어그램](docs/architecture.svg)
