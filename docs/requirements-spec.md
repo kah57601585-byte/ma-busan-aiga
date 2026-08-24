@@ -1,8 +1,8 @@
 # 부산이 프로젝트 — 요구사항 명세서
 
-- 문서버전: v0.1 (아키텍처 확정 단계 기준)
+- 문서버전: v0.2 (FR 수용 기준 전체 구체화 반영)
 - 작성일: 2026-08-24
-- 관련 산출물: 아키텍처 다이어그램(Excalidraw), 기능 명세서(functional-spec.md)
+- 관련 산출물: 아키텍처 다이어그램(Excalidraw), 기능 명세서(functional-spec.md), 백로그(backlog.md), 테스트 전략(test-strategy.md)
 
 ## 1. 프로젝트 개요
 
@@ -53,10 +53,20 @@
 | FR-09 | 시스템은 API 호출 실패 시 재시도하고, 반복 실패 시 실패 이력을 기록한다 | 필수 |
 | FR-10 | 시스템은 data.go.kr 인증키, OpenAI API 키 등 민감정보를 코드에 하드코딩하지 않고 별도 관리한다 | 필수 |
 
-**FR-04/05/07 수용 기준 (예시 — 나머지 FR도 구현 착수 전 동일하게 구체화 필요)**
-- FR-04: 매일 05:10(KST, 배치 시작 10분 후) 기준으로 `daily_recommendations`에 오늘 날짜 row가 최소 1건 이상 존재한다
-- FR-05: `GET /api/recommendations/today` 호출 시 응답까지 200ms(P95) 이내, 응답에 `courseSummary`와 1개 이상의 `places`가 포함된다
-- FR-07: `POST /api/chat` 호출 시 5초(P95) 이내 응답하며, 응답에 `answer`가 비어있지 않다
+### 2.1 FR 수용 기준 (Acceptance Criteria)
+
+| ID | 수용 기준 |
+|---|---|
+| FR-01 | 배치 완료 후 `ingestion_runs`에 오늘 날짜(run_date) 기준 실행 로그가 존재하고, WALKING/FOOD/ATTRACTION/THEME 4개 카테고리 각각에 대해 시도 기록이 남는다 (`SELECT COUNT(DISTINCT category) FROM ingestion_runs WHERE run_date = 오늘` = 4) |
+| FR-02 | 동일 `(uc_seq, category, lang)`을 이틀 연속 수집해도 `places`의 row 수는 늘지 않고 `updated_at`만 갱신된다 (중복 삽입 없음) |
+| FR-03 | 배치 완료 후 신규/변경된 `places` row는 `embedded_at IS NOT NULL`이며, 해당 `placeId`를 metadata로 가진 문서를 `vector_store`에서 조회할 수 있다 |
+| FR-04 | 매일 05:10(KST, 배치 시작 10분 후) 기준으로 `daily_recommendations`에 오늘 날짜 row가 최소 1건 이상 존재한다 |
+| FR-05 | `GET /api/recommendations/today` 호출 시 응답까지 200ms(P95) 이내, 응답에 `courseSummary`와 1개 이상의 `places`가 포함된다 |
+| FR-06 | `GET /api/recommendations/today?gugun=해운대구` 호출 시 응답의 모든 `places[].gugunNm`이 "해운대구"이거나, 해당 구군 데이터가 없으면 빈 배열과 안내 메시지를 반환한다 |
+| FR-07 | `POST /api/chat` 호출 시 5초(P95) 이내 응답하며, 응답에 `answer`가 비어있지 않다 |
+| FR-08 | `GET /api/places?category=FOOD&gugun=중구&page=0` 호출 시 200 응답, 모든 항목의 `category=FOOD`·`gugunNm=중구`이며 페이지네이션 메타(`totalElements`, `totalPages`)를 포함한다 |
+| FR-09 | 특정 카테고리 API가 3회 연속 실패하면 `ingestion_runs.status=failed`로 기록되고, 나머지 카테고리는 정상 진행되어 배치 전체는 완료 상태로 남는다(부분 성공) |
+| FR-10 | 저장소 전체에서 하드코딩된 키 값이 검출되지 않고(`grep -rE "sk-[A-Za-z0-9]{20,}|apiKey\s*[:=]\s*['\"][^$][^'\"]+['\"]"`), 모든 키는 환경변수(`${DATA_GO_KR_KEY}`, `${OPENAI_API_KEY}`) 참조로만 존재한다 |
 
 ## 3. 비기능 요구사항 (Non-Functional Requirements)
 

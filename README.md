@@ -14,3 +14,5 @@
 - [요구사항 명세서](docs/requirements-spec.md)
 - [기능 명세서](docs/functional-spec.md)
 - [아키텍처 다이어그램](docs/architecture.svg)
+- [백로그](docs/backlog.md)
+- [테스트 전략](docs/test-strategy.md)
